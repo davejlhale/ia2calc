@@ -30,7 +30,7 @@
   </style>
 </head>
 <body>
-  <h1>Production Cost Calculator</h1>
+  <h1>Rations Production Cost Calculator</h1>
   <div class="muted">
     Enter inputs. Calculated fields update automatically. Units are whatever your game uses (grams, pieces, coins, etc.).
   </div>
@@ -40,18 +40,20 @@
       <legend>Fish → Sushi</legend>
 
       <label>
-        <span>inpAmountFish</span>
+        <span>Fish Input Amount</span>
         <input type="number" step="any" id="inpAmountFish" value="0" />
       </label>
 
-      <label>
-        <span>costPerFish</span>
-        <input type="number" step="any" id="costPerFish" value="0" />
-      </label>
+     
 
       <label>
-        <span>outputAmountFish</span>
+        <span>Fish Output Amount</span>
         <input type="number" step="any" id="outputAmountFish" value="0" />
+      </label>
+
+ <label>
+        <span>costPerFish</span>
+        <input type="number" step="any" id="costPerFish" value="0" />
       </label>
 
       <label>
@@ -64,20 +66,20 @@
       <legend>Meat → Prepped Meat</legend>
 
       <label>
-        <span>inpAmountMeat</span>
+        <span>Meat Input Amount</span>
         <input type="number" step="any" id="inpAmountMeat" value="0" />
       </label>
 
+      
+
       <label>
+        <span>Meat Output Amount</span>
+        <input type="number" step="any" id="outputAmountMeat" value="0" />
+      </label>
+<label>
         <span>costPerMeat</span>
         <input type="number" step="any" id="costPerMeat" value="0" />
       </label>
-
-      <label>
-        <span>outputAmountMeat</span>
-        <input type="number" step="any" id="outputAmountMeat" value="0" />
-      </label>
-
       <label>
         <span>productionCostPerMeat (calculated)</span>
         <span class="out mono" id="productionCostPerMeat">—</span>
