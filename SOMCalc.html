@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll of Mastery Cost Calculator</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #1e1e1e;
+        color: #f5f5f5;
+        margin: 0;
+        padding: 30px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #2b2b2b;
+        padding: 24px;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0,0,0,0.35);
+    }
+
+    h1, h2 {
+        margin-top: 0;
+        color: #ffffff;
+    }
+
+    p {
+        line-height: 1.5;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: bold;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #555;
+        border-radius: 6px;
+        background: #111;
+        color: #fff;
+        box-sizing: border-box;
+    }
+
+    button {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        border: none;
+        border-radius: 6px;
+        background: #4caf50;
+        color: white;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #43a047;
+    }
+
+    .section {
+        margin-top: 24px;
+        padding: 18px;
+        background: #222;
+        border-radius: 8px;
+    }
+
+    .result-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 8px 0;
+        border-bottom: 1px solid #3a3a3a;
+    }
+
+    .result-row:last-child {
+        border-bottom: none;
+    }
+
+    .result-label {
+        font-weight: bold;
+        color: #ddd;
+    }
+
+    .result-value {
+        text-align: right;
+        color: #fff;
+    }
+
+    .formula {
+        background: #161616;
+        border-left: 4px solid #4caf50;
+        padding: 14px;
+        margin-top: 12px;
+        border-radius: 6px;
+        white-space: pre-line;
+        line-height: 1.5;
+    }
+
+    .small {
+        color: #bbb;
+        font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        .result-row {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .result-value {
+            text-align: left;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Scroll of Mastery Cost Calculator</h1>
+
+    <p>
+        This calculator works out the expected cost to craft successful Scrolls of Mastery,
+        including the material value returned when a craft fails.
+    </p>
+
+    <div class="grid">
+        <div>
+            <label for="sushiPrice">Sushi price</label>
+            <input id="sushiPrice" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div>
+            <label for="artisanPrice">Artisan Mark price</label>
+            <input id="artisanPrice" type="number" min="0" step="0.01" value="0">
+        </div>
+
+        <div>
+            <label for="successChance">Success chance (%)</label>
+            <input id="successChance" type="number" min="0.0001" max="100" step="0.01" value="10">
+        </div>
+
+        <div>
+            <label for="refundPercent">Refund on failure (%)</label>
+            <input id="refundPercent" type="number" min="0" max="100" step="0.01" value="30">
+        </div>
+
+        <div class="full">
+            <label for="targetSuccesses">Number of successful Scrolls of Mastery wanted</label>
+            <input id="targetSuccesses" type="number" min="1" step="1" value="1">
+        </div>
+    </div>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div class="section">
+        <h2>Fixed Craft Cost</h2>
+        <div class="result-row">
+            <div class="result-label">Sushi needed per attempt</div>
+            <div class="result-value" id="sushiNeededOut">8,950</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Artisan Marks needed per attempt</div>
+            <div class="result-value" id="artisanNeededOut">89.5</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Per Attempt Breakdown</h2>
+        <div class="result-row">
+            <div class="result-label">Gross cost per attempt</div>
+            <div class="result-value" id="attemptCostOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Sushi returned on fail</div>
+            <div class="result-value" id="returnedSushiOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Artisan Marks returned on fail</div>
+            <div class="result-value" id="returnedArtisanOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Value returned on fail</div>
+            <div class="result-value" id="returnedValueOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Net cost of one failed attempt</div>
+            <div class="result-value" id="failCostOut">-</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Expected Results</h2>
+        <div class="result-row">
+            <div class="result-label">Target successful Scrolls of Mastery</div>
+            <div class="result-value" id="targetOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Expected total attempts</div>
+            <div class="result-value" id="expectedAttemptsOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Expected failed attempts</div>
+            <div class="result-value" id="expectedFailuresOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Expected total cost</div>
+            <div class="result-value" id="expectedCostOut">-</div>
+        </div>
+        <div class="result-row">
+            <div class="result-label">Expected cost per successful scroll</div>
+            <div class="result-value" id="costPerSuccessOut">-</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How the calculation works</h2>
+        <div class="formula" id="formulaOut">
+Enter your numbers and press Calculate.
+        </div>
+        <p class="small">
+            Expected values are averages over many attempts. Actual RNG can be lower or higher.
+        </p>
+    </div>
+</div>
+
+<script>
+function fmt(num, decimals = 2) {
+    return Number(num).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+function calculate() {
+    const sushiNeeded = 8950;
+    const artisanNeeded = 89.5;
+
+    const sushiPrice = parseFloat(document.getElementById("sushiPrice").value) || 0;
+    const artisanPrice = parseFloat(document.getElementById("artisanPrice").value) || 0;
+    const successPercent = parseFloat(document.getElementById("successChance").value) || 0;
+    const refundPercentInput = parseFloat(document.getElementById("refundPercent").value) || 0;
+    const targetSuccesses = parseFloat(document.getElementById("targetSuccesses").value) || 0;
+
+    if (successPercent <= 0 || successPercent > 100) {
+        alert("Success chance must be more than 0 and no more than 100.");
+        return;
+    }
+
+    if (refundPercentInput < 0 || refundPercentInput > 100) {
+        alert("Refund on failure must be between 0 and 100.");
+        return;
+    }
+
+    if (targetSuccesses <= 0) {
+        alert("Number of successful scrolls wanted must be at least 1.");
+        return;
+    }
+
+    const successRate = successPercent / 100;
+    const refundRate = refundPercentInput / 100;
+
+    const sushiCost = sushiNeeded * sushiPrice;
+    const artisanCost = artisanNeeded * artisanPrice;
+    const attemptCost = sushiCost + artisanCost;
+
+    const returnedSushi = sushiNeeded * refundRate;
+    const returnedArtisan = artisanNeeded * refundRate;
+
+    const returnedValue = attemptCost * refundRate;
+    const failCost = attemptCost - returnedValue;
+
+    const expectedAttempts = targetSuccesses / successRate;
+    const expectedFailures = expectedAttempts - targetSuccesses;
+    const expectedCost = (targetSuccesses * attemptCost) + (expectedFailures * failCost);
+    const expectedCostPerSuccess = expectedCost / targetSuccesses;
+
+    document.getElementById("attemptCostOut").textContent = fmt(attemptCost);
+    document.getElementById("returnedSushiOut").textContent = fmt(returnedSushi, 2);
+    document.getElementById("returnedArtisanOut").textContent = fmt(returnedArtisan, 2);
+    document.getElementById("returnedValueOut").textContent = fmt(returnedValue);
+    document.getElementById("failCostOut").textContent = fmt(failCost);
+
+    document.getElementById("targetOut").textContent = fmt(targetSuccesses, 2);
+    document.getElementById("expectedAttemptsOut").textContent = fmt(expectedAttempts, 2);
+    document.getElementById("expectedFailuresOut").textContent = fmt(expectedFailures, 2);
+    document.getElementById("expectedCostOut").textContent = fmt(expectedCost);
+    document.getElementById("costPerSuccessOut").textContent = fmt(expectedCostPerSuccess);
+
+    const formulaText =
+`1) Cost of one craft attempt
+   = (8950 × sushi price) + (89.5 × artisan mark price)
+   = (8950 × ${fmt(sushiPrice)}) + (89.5 × ${fmt(artisanPrice)})
+   = ${fmt(sushiCost)} + ${fmt(artisanCost)}
+   = ${fmt(attemptCost)}
+
+2) Materials returned on failure
+   Sushi returned
+   = 8950 × refund %
+   = 8950 × ${fmt(refundRate, 4)}
+   = ${fmt(returnedSushi, 2)}
+
+   Artisan Marks returned
+   = 89.5 × refund %
+   = 89.5 × ${fmt(refundRate, 4)}
+   = ${fmt(returnedArtisan, 2)}
+
+3) Value returned on failure
+   = attempt cost × refund %
+   = ${fmt(attemptCost)} × ${fmt(refundRate, 4)}
+   = ${fmt(returnedValue)}
+
+4) Net cost of one failed attempt
+   = attempt cost - returned value
+   = ${fmt(attemptCost)} - ${fmt(returnedValue)}
+   = ${fmt(failCost)}
+
+5) Expected attempts to get ${fmt(targetSuccesses, 2)} success(es)
+   = target successes ÷ success rate
+   = ${fmt(targetSuccesses, 2)} ÷ ${fmt(successRate, 4)}
+   = ${fmt(expectedAttempts, 2)}
+
+6) Expected failed attempts
+   = expected attempts - successes wanted
+   = ${fmt(expectedAttempts, 2)} - ${fmt(targetSuccesses, 2)}
+   = ${fmt(expectedFailures, 2)}
+
+7) Expected total cost
+   = (successful crafts × full attempt cost) + (failed crafts × fail cost)
+   = (${fmt(targetSuccesses, 2)} × ${fmt(attemptCost)}) + (${fmt(expectedFailures, 2)} × ${fmt(failCost)})
+   = ${fmt(expectedCost)}
+
+8) Expected cost per successful scroll
+   = expected total cost ÷ successes wanted
+   = ${fmt(expectedCost)} ÷ ${fmt(targetSuccesses, 2)}
+   = ${fmt(expectedCostPerSuccess)}`;
+
+    document.getElementById("formulaOut").textContent = formulaText;
+}
+
+calculate();
+</script>
+</body>
+</html>
