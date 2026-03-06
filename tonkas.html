@@ -1,0 +1,470 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA2:WE Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: #ddd; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+  h1 { color: #ffd700; text-align: center; margin-bottom: 6px; font-size: 1.4em; }
+  .subtitle { text-align: center; color: #888; font-size: 0.85em; margin-bottom: 20px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #333; }
+  .tab-btn {
+    padding: 9px 22px; background: #1a1a1a; border: 1px solid #333;
+    border-bottom: none; border-radius: 8px 8px 0 0; color: #aaa;
+    cursor: pointer; font-size: 0.9em; transition: all 0.15s;
+  }
+  .tab-btn:hover { background: #222; color: #fff; }
+  .tab-btn.active { background: #222; color: #ffd700; border-color: #555; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── SHARED ── */
+  .controls, .panel {
+    background: #1a1a1a; border: 1px solid #333;
+    border-radius: 10px; padding: 18px; margin-bottom: 18px;
+  }
+  .panel h2, .results h2 { color: #ffd700; margin-bottom: 14px; font-size: 1em; }
+  .grid, .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.8em; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type=number], select {
+    background: #222; border: 1px solid #444; color: #fff;
+    padding: 8px 12px; border-radius: 6px; font-size: 0.92em; width: 120px;
+  }
+  input[type=number]:focus, select:focus { outline: none; border-color: #ffd700; }
+
+  .results { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+
+  /* ── RARITY BARS ── */
+  .rarity-bars { display: flex; flex-direction: column; gap: 10px; }
+  .rarity-row { display: flex; align-items: center; gap: 10px; }
+  .rarity-label { width: 90px; font-size: 0.9em; font-weight: bold; text-align: right; }
+  .bar-bg { flex: 1; background: #2a2a2a; border-radius: 4px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+  .rarity-pct { width: 55px; font-size: 0.9em; text-align: right; color: #ccc; }
+
+  .d-info {
+    background: #222; border: 1px solid #383838; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 0.85em; color: #aaa; line-height: 1.7;
+  }
+  .d-info span { color: #fff; font-weight: bold; }
+  .d-pos { color: #4caf50 !important; }
+  .d-neg { color: #f44336 !important; }
+
+  /* ── TABLES ── */
+  .table-section { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+  th { background: #222; color: #aaa; padding: 8px 10px; text-align: center; border-bottom: 1px solid #333; white-space: nowrap; }
+  td { padding: 7px 10px; text-align: center; border-bottom: 1px solid #222; }
+  tr:hover td { background: #1e1e1e; }
+  .lvl-col { color: #888; }
+  .highlight-row td { background: #1f2510 !important; outline: 1px solid #4caf50; }
+
+  /* ── RARITY COLORS ── */
+  .epic-c  { color: #a335ee; }
+  .rare-c  { color: #0070dd; }
+  .uncom-c { color: #1eff00; }
+  .com-c   { color: #fff; }
+  .poor-c  { color: #9d9d9d; }
+  .fail-c  { color: #ff4444; }
+
+  /* ── GATHER RESULT ── */
+  .formula-box {
+    background: #222; border: 1px solid #383838; border-radius: 8px;
+    padding: 14px 16px; font-size: 0.84em; color: #aaa; line-height: 1.9;
+  }
+  .formula-box b { color: #ffd700; }
+  .formula-box span { color: #fff; font-weight: bold; }
+
+  .result-big {
+    text-align: center; padding: 16px;
+    font-size: 2em; font-weight: bold; color: #4caf50;
+    border: 1px solid #2a4a2a; border-radius: 8px; background: #142014; margin-top: 14px;
+  }
+  .result-big small { display: block; font-size: 0.45em; color: #888; margin-top: 4px; }
+
+  .breakdown { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .brow {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #222; border-radius: 5px; padding: 6px 12px; font-size: 0.85em;
+  }
+  .brow .blabel { color: #aaa; }
+  .brow .bval { color: #fff; font-weight: bold; }
+  .brow.highlight { background: #1a2a1a; }
+  .brow.highlight .blabel { color: #8bc34a; }
+  .brow.highlight .bval { color: #4caf50; }
+
+  .tag {
+    display: inline-block; font-size: 0.72em; padding: 1px 7px;
+    border-radius: 10px; margin-left: 5px; vertical-align: middle;
+  }
+  .tag-glyph  { background: #2a2a50; color: #88aaff; }
+  .tag-buff   { background: #2a3a1a; color: #8bc34a; }
+  .tag-debuff { background: #3a1a1a; color: #f44336; }
+</style>
+</head>
+<body>
+
+<h1>⚒️ IA2:WE Calculator</h1>
+<p class="subtitle">Crafting Rarity · Gathering Yield · by Tonka</p>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('rarity', this)">🎲 Crafting Rarity</button>
+  <button class="tab-btn" onclick="switchTab('gather', this)">⛏️ Gathering Yield</button>
+</div>
+
+<!-- ════════════════════════════════════════ TAB 1: RARITY ════════════════════════════════════════ -->
+<div id="tab-rarity" class="tab-content active">
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Crafting Skill Level</label>
+      <input type="number" id="r-skillLvl" min="1" max="200" value="50">
+    </div>
+    <div class="control-group">
+      <label>Item (Tool) Level</label>
+      <input type="number" id="r-toolLvl" min="1" max="200" value="10">
+    </div>
+    <div class="control-group">
+      <label>Event Bonus</label>
+      <input type="number" id="r-eventBonus" min="0" max="50" value="0">
+    </div>
+    <div class="control-group">
+      <label>Atelier Level</label>
+      <input type="number" id="r-atelierLvl" min="0" max="50" value="0">
+    </div>
+  </div>
+
+  <div class="results">
+    <h2>📊 Results for Selected Inputs</h2>
+    <div class="d-info" id="r-dInfo"></div>
+    <div class="rarity-bars" id="r-rarityBars"></div>
+  </div>
+
+  <div class="results table-section">
+    <h2>📋 Full Table — Rates by Tool Level (at your ing Skill)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tool Lvl</th><th>D</th>
+          <th class="epic-c">Epic</th><th class="rare-c">Rare</th>
+          <th class="uncom-c">Uncommon</th><th class="com-c">Common</th>
+          <th class="poor-c">Poor</th><th class="fail-c">Failure</th>
+        </tr>
+      </thead>
+      <tbody id="r-tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════ TAB 2: GATHER ════════════════════════════════════════ -->
+<div id="tab-gather" class="tab-content">
+
+  <div class="panel">
+    <h2>🔧 Tool & Character</h2>
+    <div class="grid">
+      <div class="control-group">
+        <label>Tool Type</label>
+        <select id="g-toolType">
+          <option value="pickaxe">Pickaxe (Mining)</option>
+          <option value="axe">Axe (Woodcutting)</option>
+          <option value="fishing_rod">Fishing Rod (Fishing)</option>
+          <option value="crossbow">Crossbow (Hunting)</option>
+          <option value="sword">Sword (Battling)</option>
+          <option value="tinkers_kit">Tinker's Kit (Salvage)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Tool Level</label>
+        <input type="number" id="g-toolLvl" min="1" max="200" value="10">
+      </div>
+      <div class="control-group">
+        <label>Rarity</label>
+        <select id="g-rarity">
+          <option value="Poor">Poor</option>
+          <option value="Common" selected>Common</option>
+          <option value="Uncommon">Uncommon</option>
+          <option value="Rare">Rare</option>
+          <option value="Epic">Epic</option>
+          <option value="Legendary">Legendary</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Enhancement (+E)</label>
+        <input type="number" id="g-enhance" min="0" max="10" value="0">
+      </div>
+      <div class="control-group">
+        <label>Durability (0–1)</label>
+        <input type="number" id="g-durability" min="0" max="1" step="0.01" value="1">
+      </div>
+      <div class="control-group">
+        <label>Skill Level</label>
+        <input type="number" id="g-skillLvl" min="1" max="300" value="50">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🏛️ Modifiers</h2>
+    <div class="grid">
+      <div class="control-group">
+        <label>Glyph</label>
+        <select id="g-glyph">
+          <option value="none">None</option>
+          <option value="glyph_of_laborer">Laborer (+20% yield)</option>
+          <option value="glyph_of_prospector">Prospector (−5% yield)</option>
+          <option value="glyph_of_scavenging">Scavenging (−10% yield)</option>
+          <option value="glyph_of_philanthropist">Philanthropist (−5% yield)</option>
+          <option value="glyph_of_duelist">Duelist (no yield change)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Mastery Power</label>
+        <input type="number" id="g-masteryPower" min="0" max="10000" value="0">
+      </div>
+      <div class="control-group">
+        <label>Synergy Bonus (%)</label>
+        <input type="number" id="g-synergyBonus" min="0" max="500" step="0.1" value="0">
+      </div>
+      <div class="control-group">
+        <label>Community Bldg Lvl</label>
+        <input type="number" id="g-buildingLvl" min="0" max="100" value="0">
+      </div>
+      <div class="control-group">
+        <label>Tithe Rate (%)</label>
+        <input type="number" id="g-tithe" min="0" max="100" value="0">
+      </div>
+      <div class="control-group" style="justify-content:flex-end; gap:8px;">
+        <label style="cursor:pointer; text-transform:none;">
+          <input type="checkbox" id="g-foodBuff"> Food Buff (+25%)
+        </label>
+        <label style="cursor:pointer; text-transform:none;">
+          <input type="checkbox" id="g-starving"> Starving (−25%)
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📊 Result</h2>
+    <div class="formula-box" id="g-formulaBox"></div>
+    <div class="breakdown" id="g-breakdown"></div>
+    <div class="result-big" id="g-resultBig"></div>
+  </div>
+
+  <div class="panel table-section">
+    <h2>📋 Yield by Tool Level (at your Skill Level)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tool Lvl</th><th>Base Power</th><th>Eff. Power</th>
+          <th>Raw Yield</th><th>Final Yield</th>
+        </tr>
+      </thead>
+      <tbody id="g-tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════ SCRIPTS ════════════════════════════════════════ -->
+<script>
+  /* ── TAB SWITCHING ── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ══════════════════════════════════════════════════
+     RARITY CALCULATOR
+  ══════════════════════════════════════════════════ */
+  const RARITY_COLORS = {
+    Epic:'#a335ee', Rare:'#0070dd', Uncommon:'#1eff00',
+    Common:'#ffffff', Poor:'#9d9d9d', Failure:'#ff4444'
+  };
+
+  function calcRarities(D) {
+    let rangeMin, rangeMax;
+    if (D >= 0) {
+      rangeMin = Math.min(1 + 4 * D, 180);
+      rangeMax = 180;
+    } else {
+      rangeMin = 1;
+      rangeMax = Math.max(60, 180 + 4 * D);
+    }
+    const rangeSize = rangeMax - rangeMin + 1;
+    function getChance(minScore, maxScore) {
+      const overlapMin = Math.max(rangeMin, minScore);
+      const overlapMax = Math.min(rangeMax, maxScore);
+      if (overlapMin > overlapMax) return 0;
+      return ((overlapMax - overlapMin + 1) / rangeSize) * 100;
+    }
+    return {
+      Epic: getChance(166,999), Rare: getChance(146,165),
+      Uncommon: getChance(121,145), Common: getChance(91,120),
+      Poor: getChance(51,90), Failure: getChance(-999,50),
+      rangeMin, rangeMax
+    };
+  }
+
+  function renderRarity() {
+    const skill   = parseInt(document.getElementById('r-skillLvl').value)   || 1;
+    const tool    = parseInt(document.getElementById('r-toolLvl').value)    || 1;
+    const event_b = parseInt(document.getElementById('r-eventBonus').value) || 0;
+    const atelier = parseInt(document.getElementById('r-atelierLvl').value) || 0;
+    const D = skill + event_b + atelier - tool;
+    const r = calcRarities(D);
+
+    const dClass = D >= 0 ? 'd-pos' : 'd-neg';
+    document.getElementById('r-dInfo').innerHTML =
+      `<b>D</b> = SkillLvl(<span>${skill}</span>) + EventBonus(<span>${event_b}</span>) + AtelierLvl(<span>${atelier}</span>) − ToolLvl(<span>${tool}</span>) = <span class="${dClass}">${D}</span>` +
+      `<br>Roll range: <span>${r.rangeMin}</span> – <span>${r.rangeMax}</span> (${r.rangeMax - r.rangeMin + 1} values)`;
+
+    const barsEl = document.getElementById('r-rarityBars');
+    barsEl.innerHTML = '';
+    for (const [name, pct] of Object.entries(r)) {
+      if (name === 'rangeMin' || name === 'rangeMax') continue;
+      const row = document.createElement('div');
+      row.className = 'rarity-row';
+      row.innerHTML = `
+        <div class="rarity-label" style="color:${RARITY_COLORS[name]}">${name}</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct.toFixed(2)}%;background:${RARITY_COLORS[name]};opacity:0.85"></div></div>
+        <div class="rarity-pct">${pct.toFixed(1)}%</div>`;
+      barsEl.appendChild(row);
+    }
+
+    const maxLvl = Math.max(tool + 10, 50);
+    const tbody = document.getElementById('r-tableBody');
+    tbody.innerHTML = '';
+    for (let lvl = 1; lvl <= maxLvl; lvl++) {
+      const d = skill + event_b + atelier - lvl;
+      const rr = calcRarities(d);
+      const tr = document.createElement('tr');
+      if (lvl === tool) tr.className = 'highlight-row';
+      tr.innerHTML = `
+        <td class="lvl-col">${lvl}</td>
+        <td style="color:${d>=0?'#4caf50':'#f44336'}">${d}</td>
+        <td class="epic-c">${rr.Epic.toFixed(1)}%</td>
+        <td class="rare-c">${rr.Rare.toFixed(1)}%</td>
+        <td class="uncom-c">${rr.Uncommon.toFixed(1)}%</td>
+        <td class="com-c">${rr.Common.toFixed(1)}%</td>
+        <td class="poor-c">${rr.Poor.toFixed(1)}%</td>
+        <td class="fail-c">${rr.Failure.toFixed(1)}%</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  document.querySelectorAll('#tab-rarity input').forEach(el => el.addEventListener('input', renderRarity));
+
+  /* ══════════════════════════════════════════════════
+     GATHERING YIELD CALCULATOR
+  ══════════════════════════════════════════════════ */
+  const G_RARITY_BASES = { Poor:-0.15, Common:0.00, Uncommon:0.40, Rare:0.80, Epic:1.20, Legendary:1.50 };
+  const G_RARITY_MULTS = { Poor:0.95, Common:1.00, Uncommon:1.05, Rare:1.10, Epic:1.15, Legendary:1.20 };
+  const G_RARITY_COLORS = { Poor:'#9d9d9d', Common:'#ffffff', Uncommon:'#1eff00', Rare:'#0070dd', Epic:'#a335ee', Legendary:'#ff8000' };
+
+  function calcPower(toolLvl, rarity, enhance, durability) {
+    const rBase = G_RARITY_BASES[rarity] ?? 0;
+    const rMult = G_RARITY_MULTS[rarity] ?? 1;
+    const base = toolLvl + rBase + (0.25 * enhance);
+    const mult = rMult + (0.10 * enhance);
+    const power = base * mult;
+    return { base, mult, power, effectivePower: power * durability };
+  }
+
+  function calcYield(effectivePower, skillLvl, glyph, masteryPower, synergyBonus, foodBuff, starving, buildingLvl, tithe) {
+    let y = Math.floor((effectivePower * 2) * skillLvl);
+    const steps = [];
+    steps.push({ label: 'Raw Yield  =  floor(EffPower × 2 × SkillLvl)', val: y });
+
+    if (glyph === 'glyph_of_laborer')       { y = Math.floor(y * 1.20); steps.push({ label: 'Glyph of Laborer ×1.20', val: y, tag:'glyph', tagLabel:'+20%' }); }
+    if (glyph === 'glyph_of_prospector')    { y = Math.floor(y * 0.95); steps.push({ label: 'Glyph of Prospector ×0.95', val: y, tag:'glyph', tagLabel:'−5%' }); }
+    if (glyph === 'glyph_of_scavenging')    { y = Math.floor(y * 0.90); steps.push({ label: 'Glyph of Scavenging ×0.90', val: y, tag:'glyph', tagLabel:'−10%' }); }
+    if (glyph === 'glyph_of_philanthropist'){ y = Math.floor(y * 0.95); steps.push({ label: 'Glyph of Philanthropist ×0.95', val: y, tag:'glyph', tagLabel:'−5%' }); }
+
+    if (masteryPower > 0) { y = Math.floor(y * (1 + masteryPower * 0.01)); steps.push({ label: `Mastery ×${(1+masteryPower*0.01).toFixed(4)}`, val: y, tag:'buff', tagLabel:`+${masteryPower}%` }); }
+    if (synergyBonus > 0) { y = Math.floor(y * (1 + synergyBonus/100)); steps.push({ label: `Synergy ×${(1+synergyBonus/100).toFixed(4)}`, val: y, tag:'buff', tagLabel:`+${synergyBonus}%` }); }
+    if (starving)  { y = Math.floor(y * 0.75); steps.push({ label: 'Starving ×0.75', val: y, tag:'debuff', tagLabel:'−25%' }); }
+    if (foodBuff)  { y = Math.floor(y * 1.25); steps.push({ label: 'Food Buff ×1.25', val: y, tag:'buff', tagLabel:'+25%' }); }
+    if (buildingLvl > 0) { y = Math.floor(y * (1 + buildingLvl*0.01)); steps.push({ label: `Community Bldg Lvl ${buildingLvl} ×${(1+buildingLvl*0.01).toFixed(2)}`, val: y, tag:'buff', tagLabel:`+${buildingLvl}%` }); }
+    if (tithe > 0) { const amt = y*(tithe/100); y = Math.floor(y-amt); steps.push({ label: `Tithe ${tithe}%`, val: y, tag:'debuff', tagLabel:`−${tithe}%` }); }
+
+    return { final: y, steps };
+  }
+
+  function renderGather() {
+    const toolType    = document.getElementById('g-toolType').value;
+    const toolLvl     = parseInt(document.getElementById('g-toolLvl').value) || 1;
+    const rarity      = document.getElementById('g-rarity').value;
+    const enhance     = parseInt(document.getElementById('g-enhance').value) || 0;
+    const durability  = parseFloat(document.getElementById('g-durability').value) ?? 1;
+    const skillLvl    = parseInt(document.getElementById('g-skillLvl').value) || 1;
+    const glyph       = document.getElementById('g-glyph').value;
+    const masteryPow  = parseFloat(document.getElementById('g-masteryPower').value) || 0;
+    const synergy     = parseFloat(document.getElementById('g-synergyBonus').value) || 0;
+    const buildingLvl = parseInt(document.getElementById('g-buildingLvl').value) || 0;
+    const tithe       = parseFloat(document.getElementById('g-tithe').value) || 0;
+    const foodBuff    = document.getElementById('g-foodBuff').checked;
+    const starving    = document.getElementById('g-starving').checked;
+
+    const pw  = calcPower(toolLvl, rarity, enhance, durability);
+    const res = calcYield(pw.effectivePower, skillLvl, glyph, masteryPow, synergy, foodBuff, starving, buildingLvl, tithe);
+    const rarityColor = G_RARITY_COLORS[rarity];
+
+    document.getElementById('g-formulaBox').innerHTML = `
+      <b>Step 1 — Tool Power</b><br>
+      base = ToolLvl(<span>${toolLvl}</span>) + RarityBase(<span style="color:${rarityColor}">${G_RARITY_BASES[rarity]}</span>) + 0.25×Enhance(<span>${enhance}</span>) = <span>${pw.base.toFixed(3)}</span><br>
+      mult = RarityMult(<span style="color:${rarityColor}">${G_RARITY_MULTS[rarity]}</span>) + 0.10×Enhance(<span>${enhance}</span>) = <span>${pw.mult.toFixed(3)}</span><br>
+      Power = base × mult = <span>${pw.power.toFixed(4)}</span> &nbsp;|&nbsp; EffectivePower = Power × Durability(<span>${durability}</span>) = <span>${pw.effectivePower.toFixed(4)}</span><br><br>
+      <b>Step 2 — Raw Yield</b><br>
+      floor(EffPower × 2 × SkillLvl) = floor(<span>${pw.effectivePower.toFixed(4)}</span> × 2 × <span>${skillLvl}</span>) = <span>${Math.floor(pw.effectivePower*2*skillLvl).toLocaleString()}</span><br><br>
+      <b>Step 3 — Modifiers</b> (each applied with floor)
+    `;
+
+    const bEl = document.getElementById('g-breakdown');
+    bEl.innerHTML = '';
+    for (const s of res.steps) {
+      const tagHtml = s.tag ? `<span class="tag tag-${s.tag}">${s.tagLabel}</span>` : '';
+      const isLast = s === res.steps[res.steps.length - 1];
+      const div = document.createElement('div');
+      div.className = 'brow' + (isLast ? ' highlight' : '');
+      div.innerHTML = `<span class="blabel">${s.label}${tagHtml}</span><span class="bval">${s.val.toLocaleString()}</span>`;
+      bEl.appendChild(div);
+    }
+
+    document.getElementById('g-resultBig').innerHTML = `${res.final.toLocaleString()} <small>per gather tick</small>`;
+
+    const tbody = document.getElementById('g-tableBody');
+    tbody.innerHTML = '';
+    const maxLvl = Math.max(toolLvl + 10, 30);
+    for (let lvl = 1; lvl <= maxLvl; lvl++) {
+      const p = calcPower(lvl, rarity, enhance, durability);
+      const r = calcYield(p.effectivePower, skillLvl, glyph, masteryPow, synergy, foodBuff, starving, buildingLvl, tithe);
+      const rawYield = Math.floor(p.effectivePower * 2 * skillLvl);
+      const tr = document.createElement('tr');
+      if (lvl === toolLvl) tr.className = 'highlight-row';
+      tr.innerHTML = `
+        <td class="lvl-col">${lvl}</td>
+        <td>${p.power.toFixed(3)}</td>
+        <td>${p.effectivePower.toFixed(3)}</td>
+        <td>${rawYield.toLocaleString()}</td>
+        <td><b>${r.final.toLocaleString()}</b></td>`;
+      tbody.appendChild(tr);
+    }
+
+  }
+
+  document.querySelectorAll('#tab-gather input, #tab-gather select').forEach(el => el.addEventListener('input', renderGather));
+
+  /* ── INIT ── */
+  renderRarity();
+  renderGather();
+</script>
+</body>
+</html>
