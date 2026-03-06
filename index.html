@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Tools</title>
+<title>IA2 Tools</title>
 
 <style>
 
@@ -16,7 +16,7 @@ body{
 }
 
 .container{
-    max-width:600px;
+    max-width:650px;
     margin:auto;
     background:#2b2b2b;
     padding:30px;
@@ -25,20 +25,18 @@ body{
 }
 
 h1{
-    margin-top:0;
     text-align:center;
-    color:#ffffff;
+    margin-top:0;
+}
+
+.section{
+    margin-top:25px;
 }
 
 .links{
     display:flex;
     flex-direction:column;
-    gap:16px;
-    margin-top:20px;
-}
-
-.links a{
-    text-decoration:none;
+    gap:14px;
 }
 
 button{
@@ -54,6 +52,22 @@ button{
 
 button:hover{
     background:#43a047;
+}
+
+select{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border-radius:6px;
+    border:1px solid #555;
+    background:#111;
+    color:#fff;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:bold;
 }
 
 @media (max-width:600px){
@@ -76,12 +90,16 @@ button:hover{
 
 <div class="container">
 
-<h1>IA2 Tools</h1>
+<h1>Idle Artisan 2 Tools</h1>
+
+
+<div class="section">
+<h2>Calculators</h2>
 
 <div class="links">
 
 <a href="rationCostings.html">
-<button>Ration Calculator</button>
+<button>Ration Production Calculator</button>
 </a>
 
 <a href="SOMCalc.html">
@@ -89,16 +107,74 @@ button:hover{
 </a>
 
 <a href="tonkas.html">
-<button>Crafting Rarity / Gathering Yield by Tonka</button>
+<button>Crafting Rarity / Gathering Yield Calculator</button>
+</a>
+
+<a href="https://idleartisan.saeria.dev/">
+<button>Refiner / Crafting Chance Calculator (Cae / Lyn)</button>
 </a>
 
 <a href="https://docs.google.com/spreadsheets/d/1ML9FBMoWqDacN2tYOdy1V7xhJoS3gCiJy_U0szr2YBA/edit?gid=0#gid=0">
-<button>IA2 Crafting Calculator by BigThickBoris</button>
+<button>IA2 Crafting Calculator Spreadsheet (BigThickBoris)</button>
 </a>
 
 </div>
+</div>
+
+
+<div class="section">
+
+<h2>Game Scripts</h2>
+
+<label for="scriptSelect">Choose a Script</label>
+
+<select id="scriptSelect" onchange="openScript()">
+
+<option value="">Select a script...</option>
+
+<option value="https://greasyfork.org/en/scripts/568499-idle-artisan-dungeon-dashboard">
+Dungeon Damage / Level Dashboard
+</option>
+
+<option value="https://greasyfork.org/en/scripts/568199-idleartisan2grid">
+Idle Artisan 2 Grid UI Overhaul
+</option>
+
+<option value="https://greasyfork.org/en/scripts/568379-idle-artisan-dungeon-helper">
+Dungeon Helper (Damage per Dungeon Level – WIP)
+</option>
+
+<option value="https://greasyfork.org/en/scripts/567894-idle-artisan-dungeon-ready-alert-room-stuck-alert">
+Dungeon Ready / Room Stuck Alerts
+</option>
+
+<option value="">
+Auto monitor and undercut market
+</option>
+
+<option value="">
+Auto buy from market
+</option>
+
+</select>
 
 </div>
+
+</div>
+
+<script>
+
+function openScript(){
+
+    const url = document.getElementById("scriptSelect").value;
+
+    if(url){
+        window.open(url, "_blank");
+    }
+
+}
+
+</script>
 
 </body>
 </html>
